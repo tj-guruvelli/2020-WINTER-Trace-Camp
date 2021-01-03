@@ -1,65 +1,102 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import { useState } from "react";
 
-export default function Home() {
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+import Game from "../components/Gameboard";
+import MainMenu from "../components/MainMenu";
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+let clickedCard = null;
+let preventClick = false;
+let combosFound = 0;
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+const Home = () => {
+  const [playing, setPlaying] = useState(false);
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+  const start = () => {
+    setPlaying(true);
+  };
 
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+  const gameover = (score) => {
+    if (score > highscore) {
+      setHighscore(score);
+    }
+    setPlaying(false);
+  
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
+
+  // Removes the hidden color when the card is clicked
+  function onCardClicked(event) {
+  const target = event.currentTarget;
+  if (
+  // Prevents the user from clicking another card before the program decides if the two cards flipped over match 
+  preventClick ||  
+  // can't click cards if the clicked card matches the target card 
+  target === clickedCard || 
+  // can't click cards if they are already matching
+  target.className.includes('done')){
+  return;
 }
+
+
+  console.log(target.className);
+  target.className = target.className
+    .replace('color-hidden','')
+    target.className += ' done';
+
+    console.log(target.getAttribute('data-color'))
+
+    //If we haven't clicked a card, keep track of the card, display it's color
+    if (!clickedCard) {
+        clickedCard = target
+    } 
+    else if (clickedCard) {
+      //If we have already clicked a card, check if the new card matches the old card color
+      preventClick = true;
+      if (clickedCard.getAttribute('data-color') !== target.getAttribute('data-color')
+      ) 
+      { 
+        console.log('cards are not equal')
+        preventClick = true;
+        setTimeout (() => {
+          clickedCard.className = clickedCard.className.replace('done', '') +
+          ' color-hidden';
+          target.className = target.className.replace('done', '') +
+          ' color-hidden';
+          // Resets the tracking if the card is clicked back to normal in order to track again
+          clickedCard = null;
+          // During the 500 milisecond wait, the program will prevent the user from clicking cards
+          preventClick = false;
+          
+          }, 500);
+        } 
+        else {
+        // Resets the tracking if the card is clicked back to normal
+        clickedCard = null;
+        // Everytime a combo is found it keeps track by acculmating 
+        combosFound++
+        if (combosFound === 8){
+          alert('YOU WIN')
+        }
+        }
+
+    }
+  }
+
+};
+
+  return (
+    <div className="flex flex-col flex-center justify-center h-screen">
+      <div className="flex flex-col text-center items-center">
+        
+        
+        {playing ? (
+          <Game onGameover={gameover} />
+        ) : (
+          <MainMenu onStart={start} />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Home;
